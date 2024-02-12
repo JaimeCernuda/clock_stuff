@@ -1,0 +1,3 @@
+add_executable(serialization_test test.cpp)
+target_link_libraries(serialization_test PRIVATE cereal::cereal)
+install(TARGETS serialization_test DESTINATION serialization)

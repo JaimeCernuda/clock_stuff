@@ -1,0 +1,5 @@
+add_executable(latency_server server.cpp)
+target_link_libraries(latency_server PRIVATE thallium)
+add_executable(latency_client client.cpp)
+target_link_libraries(latency_client PRIVATE thallium)
+install(TARGETS latency_server latency_client DESTINATION network_latency)
