@@ -7,6 +7,7 @@
 #include <thread>
 #include <ratio>
 #include <iomanip> // For std::setw
+#include <numeric>
 
 namespace tl = thallium;
 
@@ -20,6 +21,43 @@ std::string determineTimeUnit() {
     return "ms";
   }
   return "s";
+}
+
+typedef std::chrono::system_clock::duration local_time;
+void calculateAndPrint(std::vector<local_time>& times, std::string marker, float range=1.5) {
+  if (times.empty()) return;
+
+  std::vector<long long> values;
+  std::transform(times.begin(), times.end(), std::back_inserter(values), [](const local_time& time) {
+    return time.count();
+  });
+
+  // Sorting to easily find median and potentially use for IQR based approach
+  std::sort(values.begin(), values.end());
+  long long median = values[values.size() / 2];
+
+  // Simple outlier detection based on a multiplier of the median
+  const long long outlierThreshold = median * range;
+  std::vector<long long> filteredValues, outliers;
+
+  for (auto value : values) {
+    if (value <= outlierThreshold) {
+      filteredValues.push_back(value);
+    } else {
+      outliers.push_back(value);
+    }
+  }
+
+  // Calculating average of filtered values
+  double avg = std::accumulate(filteredValues.begin(), filteredValues.end(), 0LL) / double(filteredValues.size());
+
+  // Printing average and outliers
+  std::cout << "Average " << marker <<": " << avg << std::endl;
+  std::cout << "Discarded measurements: ";
+  for (auto outlier : outliers) {
+    std::cout << outlier << " ";
+  }
+  std::cout << std::endl;
 }
 
 int main(int argc, char** argv) {
@@ -80,16 +118,8 @@ int main(int argc, char** argv) {
     }
   }
 
-    long long sumRtt = 0, sumOffset = 0;
-    for (int i = 0; i < numTests; ++i) {
-        sumRtt += rtts[i].count();
-        sumOffset += offsets[i].count();
-    }
-
-    double avgRtt = double(sumRtt) / numTests;
-    double avgOffset = double(sumOffset) / numTests;
-
-    std::cout << "Average RTT: " << avgRtt << " ms, Average Offset: " << avgOffset << " ms" << std::endl;
+  calculateAndPrint(rtts, "RTT");
+  calculateAndPrint(offsets, "Offset");
 
     clientEngine.shutdown_remote_engine(server);
     std::cout << "Requested remote server shutdown." << std::endl;
