@@ -5,20 +5,21 @@
 #include <chrono>
 #include <vector>
 #include <thread>
+#include <ratio>
 #include <iomanip> // For std::setw
 
 namespace tl = thallium;
 
-std::pair<std::string, std::ratio<1>> determineTimeUnit() {
+std::string determineTimeUnit() {
   using namespace std::chrono;
-  if (std::ratio_equal<system_clock::duration::period, nano>::value) {
-    return {"ns", nano{}};
-  } else if (std::ratio_equal<system_clock::duration::period, micro>::value) {
-    return {"us", micro{}};
-  } else if (std::ratio_equal<system_clock::duration::period, milli>::value) {
-    return {"ms", milli{}};
+  if (std::ratio_equal<system_clock::duration::period, std::nano>::value) {
+    return "ns";
+  } else if (std::ratio_equal<system_clock::duration::period, std::micro>::value) {
+    return "us";
+  } else if (std::ratio_equal<system_clock::duration::period, std::milli>::value) {
+    return "ms";
   }
-  return {"s", std::ratio<1>{}};
+  return "s";
 }
 
 int main(int argc, char** argv) {
@@ -35,10 +36,8 @@ int main(int argc, char** argv) {
     tl::endpoint server = clientEngine.lookup(serverAddress);
     tl::remote_procedure getTime = clientEngine.define("get_time");
 
-    std::vector<long long> rtts, offsets;
 
-  auto [unit, ratio] = determineTimeUnit();
-
+  auto unit = determineTimeUnit();
   std::cout << "System clock precision: " << unit << std::endl;
 
   std::cout << std::left << std::setw(10) <<
@@ -49,22 +48,24 @@ int main(int argc, char** argv) {
     "RTT (" << unit << ")" << std::setw(10) <<
     "Offset (" << unit << ")" << std::endl;
 
-  typedef std::chrono::duration<long long, decltype(ratio)> local_time;
+  typedef std::chrono::system_clock::duration local_time;
+  std::vector<local_time> rtts, offsets;
+
   for (int i = 0; i < numTests; ++i) {
     auto t1 = std::chrono::system_clock::now();
-    long long t2_raw = getTime.on(server)(); // Assuming this returns time in the same unit as Clock
+    int64_t t2_raw = getTime.on(server)(); // Assuming this returns time in the same unit as Clock
     auto t2 = std::chrono::system_clock::time_point(local_time(t2_raw));
     auto t3 = std::chrono::system_clock::now();
 
     // Use the detected ratio for duration calculation
-    auto rttDuration = std::chrono::duration_cast<local_time>(t3 - t1);
-    auto offsetDuration = std::chrono::duration_cast<local_time>(t2 - t1 - rttDuration / 2);
+    local_time rttDuration = std::chrono::duration_cast<local_time>(t3 - t1);
+    local_time offsetDuration = std::chrono::duration_cast<local_time>(t2 - t1 - rttDuration / 2);
 
-    double rtt = rttDuration.count();
-    double offset = offsetDuration.count();
+    auto rtt = rttDuration.count();
+    auto offset = offsetDuration.count();
 
-    rtts.push_back(rtt);
-    offsets.push_back(offset);
+    rtts.push_back(rttDuration);
+    offsets.push_back(offsetDuration);
 
     std::cout << std::left << std::setw(10) << i + 1
               << std::setw(20) << std::chrono::duration_cast<local_time>(t1.time_since_epoch()).count()
@@ -81,9 +82,10 @@ int main(int argc, char** argv) {
 
     long long sumRtt = 0, sumOffset = 0;
     for (int i = 0; i < numTests; ++i) {
-        sumRtt += rtts[i];
-        sumOffset += offsets[i];
+        sumRtt += rtts[i].count();
+        sumOffset += offsets[i].count();
     }
+
     double avgRtt = double(sumRtt) / numTests;
     double avgOffset = double(sumOffset) / numTests;
 
