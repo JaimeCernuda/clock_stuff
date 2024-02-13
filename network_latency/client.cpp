@@ -119,7 +119,9 @@ int main(int argc, char** argv) {
   }
 
   calculateAndPrint(rtts, "RTT");
-  calculateAndPrint(offsets, "Offset");
+//  calculateAndPrint(offsets, "Offset");
+
+    std::cout << "Average Offset: " << std::reduce(offsets.begin(), offsets.end()).count() << " ms" << std::endl;
 
     clientEngine.shutdown_remote_engine(server);
     std::cout << "Requested remote server shutdown." << std::endl;
