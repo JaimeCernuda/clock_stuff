@@ -82,13 +82,14 @@ int main(int argc, char** argv) {
     "Attempt" << std::setw(20) <<
     "Timestamp1" << std::setw(20) <<
     "Timestamp2" << std::setw(20) <<
-    "Timestamp3" << std::setw(10) <<
-    "RTT (" << unit << ")" << std::setw(10) <<
-    "Offset (" << unit << ")" << std::endl;
+    "Timestamp3" << std::setw(15) <<
+    "RTT" << std::setw(15) <<
+    "Offset"  << std::setw(15) <<
+    "Difference" << std::endl;
 
   typedef std::chrono::system_clock::duration local_time;
   std::vector<local_time> rtts, offsets;
-
+  decltype(std::chrono::system_clock::now().time_since_epoch().count()) lastTime = 0;
   for (int i = 0; i < numTests; ++i) {
     auto t1 = std::chrono::system_clock::now();
     int64_t t2_raw = getTime.on(server)(); // Assuming this returns time in the same unit as Clock
@@ -102,6 +103,9 @@ int main(int argc, char** argv) {
     auto rtt = rttDuration.count();
     auto offset = offsetDuration.count();
 
+    auto diff = (lastTime != 0) ? offset - lastTime : 0;
+    lastTime = offset;
+
     rtts.push_back(rttDuration);
     offsets.push_back(offsetDuration);
 
@@ -111,6 +115,7 @@ int main(int argc, char** argv) {
               << std::setw(20) << std::chrono::duration_cast<local_time>(t3.time_since_epoch()).count()
               << std::setw(15) << rtt
               << std::setw(15) << offset
+              << std::setw(15) << diff
               << std::endl;
 
     if (i < numTests - 1) {
