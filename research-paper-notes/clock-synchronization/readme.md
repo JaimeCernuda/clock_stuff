@@ -12,6 +12,7 @@ The starting point is the paper "Exploiting a Natural Network Effect for Scalabl
 4. [Graham: Synchronizing Clocks by Leveraging Local Clock Properties (Najafi, 2022)](https://www.usenix.org/system/files/nsdi22-paper-najafi_1.pdf) -  Notes in ["Related Work Notes"](./related%20papers.docx)
 
 ***Below are few other cited papers: which either refer to clock synchronization or use clock synchronization in their study, but not related to us. Documented to refer back in future.***
+
 6. [Fundamental Limits on Synchronizing Clocks Over Networks (Freris, 2011)](https://ieeexplore.ieee.org/document/5605654) - An old paper which outlines the limilations to clock synchronization over networks. It tells what is feasible and what is not feasible w.r.t to clock synchronization. However, they did not propose a new clock synchronization algos.
 6. [White rabbit: Sub-nanosecond timing distribution over ethernet (Moreira, 2009)](https://ieeexplore.ieee.org/document/5340196) - Says that an ethernet-based system (White Rabbit) achieves better accurate clock synchronization over fiber optics links. Not related to our study.
 7. [Non-Hierarchical Clock Synchronization for Wireless Sensor Networks (Brown, 2012)](https://arxiv.org/pdf/1212.1216) - Non-hierarchical, distributed algorithm for clock synchronization that operates at the physical/MAC layers through pairwise bidirectional messaging between nodes. Not related to our study.
